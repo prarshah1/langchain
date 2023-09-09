@@ -33,6 +33,7 @@ class ConstitutionalChain(Chain):
             constitutional_chain = ConstitutionalChain.from_llm(
                 llm=llm,
                 chain=qa_chain,
+                prompt=qa_prompt,
                 constitutional_principles=[
                     ConstitutionalPrinciple(
                         critique_request="Tell if this answer is good.",
@@ -44,7 +45,8 @@ class ConstitutionalChain(Chain):
             constitutional_chain.run(question="What is the meaning of life?")
     """
 
-    chain: LLMChain
+    chain: Chain
+    prompt: BasePromptTemplate
     constitutional_principles: List[ConstitutionalPrinciple]
     critique_chain: LLMChain
     revision_chain: LLMChain
@@ -63,7 +65,8 @@ class ConstitutionalChain(Chain):
     def from_llm(
         cls,
         llm: BaseLanguageModel,
-        chain: LLMChain,
+        chain: Chain,
+        prompt: BasePromptTemplate,
         critique_prompt: BasePromptTemplate = CRITIQUE_PROMPT,
         revision_prompt: BasePromptTemplate = REVISION_PROMPT,
         **kwargs: Any,
@@ -73,6 +76,7 @@ class ConstitutionalChain(Chain):
         revision_chain = LLMChain(llm=llm, prompt=revision_prompt)
         return cls(
             chain=chain,
+            prompt=prompt,
             critique_chain=critique_chain,
             revision_chain=revision_chain,
             **kwargs,
@@ -101,7 +105,7 @@ class ConstitutionalChain(Chain):
             callbacks=_run_manager.get_child("original"),
         )
         initial_response = response
-        input_prompt = self.chain.prompt.format(**inputs)
+        input_prompt = self.prompt.format(**inputs)
 
         _run_manager.on_text(
             text="Initial response: " + response + "\n\n",

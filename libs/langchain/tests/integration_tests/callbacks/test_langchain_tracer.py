@@ -163,10 +163,12 @@ def test_tracing_v2_context_manager() -> None:
 
 
 def test_tracing_v2_chain_with_tags() -> None:
+    prompt = PromptTemplate.from_template("Q: {question} A:")
     llm = OpenAI(temperature=0)
     chain = ConstitutionalChain.from_llm(
         llm,
-        chain=LLMChain.from_string(llm, "Q: {question} A:"),
+        prompt=prompt,
+        chain=LLMChain(llm=llm, prompt="Q: {question} A:"),
         tags=["only-root"],
         constitutional_principles=[
             ConstitutionalPrinciple(
